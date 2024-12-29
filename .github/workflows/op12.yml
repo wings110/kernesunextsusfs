@@ -77,26 +77,35 @@ jobs:
         working-directory: ${{ env.ROOT_DIR }}/oneplus12_v/kernel_platform
         run: |
           echo "adding susfs"
-          git clone https://github.com/TheWildJames/kernel_patches.git /tmp/kernel_patches_temp
-          cp -r /tmp/kernel_patches_temp/* ../kernel_patches/
-          rm -rf /tmp/kernel_patches_temp
-          cp ../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU-Next/
-          cp ../../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android14-6.1.patch ./common/
-          cp ../../susfs4ksu/kernel_patches/fs/susfs.c ./common/fs/
-          cp ../../susfs4ksu/kernel_patches/include/linux/susfs.h ./common/include/linux/
+          # Copy the SUSFS patches and files from susfs4ksu repository
+          cp ../../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU-Next/
+          cp ../../../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android14-6.1.patch ./common/
+          cp ../../../susfs4ksu/kernel_patches/fs/susfs.c ./common/fs/
+          cp ../../../susfs4ksu/kernel_patches/include/linux/susfs.h ./common/include/linux/
+
+          # Apply the SUSFS patch to KernelSU-Next
           cd KernelSU-Next
           patch -p1 < 10_enable_susfs_for_ksu.patch
-          cd ../common
+          cd ..
+
+          # Apply the SUSFS patch in the common directory
+          cd common
           patch -p1 < 50_add_susfs_in_gki-android14-6.1.patch || true
-          cp ../../kernel_patches/69_hide_stuff.patch ./
+
+          # Copy and apply the 69_hide_stuff patch from kernel_patches repository
+          cp ../../../kernel_patches/69_hide_stuff.patch ./
           patch -p1 -F 3 < 69_hide_stuff.patch || true
+
+          # Modify the Makefile as required
           sed -i '/obj-\$(CONFIG_KSU_SUSFS_SUS_SU) += sus_su.o/d' ./fs/Makefile
           cd ..
-          cp ../kernel_patches/selinux.c_fix.patch ./
+
+          # Copy and apply additional patches from kernel_patches repository
+          cp ../../../kernel_patches/selinux.c_fix.patch ./
           patch -p1 -F 3 < selinux.c_fix.patch
-          cp ../kernel_patches/apk_sign.c_fix.patch ./
+          cp ../../../kernel_patches/apk_sign.c_fix.patch ./
           patch -p1 -F 3 < apk_sign.c_fix.patch
-          cp ../kernel_patches/Makefile_fix.patch ./
+          cp ../../../kernel_patches/Makefile_fix.patch ./
           patch -p1 --fuzz=3 < Makefile_fix.patch
 
       # Step 7: Build Kernel
