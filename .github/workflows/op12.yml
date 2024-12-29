@@ -18,11 +18,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-pip curl git
-          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/.bin/repo
-          chmod a+rx ~/.bin/repo
-          echo "export PATH=\$HOME/.bin:\$PATH" >> ~/.bashrc
-          source ~/.bashrc
+          sudo apt-get install -y python3-pip curl git repo
 
       # Step 2: Set up Build Directory
       - name: Set up Build Directory
