@@ -14,13 +14,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      # Step 1: Install Dependencies without pip
       - name: Install Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y python3-pip curl git
-          pip3 install --upgrade pip
-          pip3 install git-repo --no-deps
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/.bin/repo
+          chmod a+rx ~/.bin/repo
+          echo "export PATH=\$HOME/.bin:\$PATH" >> ~/.bashrc
+          source ~/.bashrc
 
+      # Step 2: Set up Build Directory
       - name: Set up Build Directory
         run: |
           mkdir -p builds
@@ -30,12 +34,14 @@ jobs:
           mkdir "$ROOT_DIR"
           cd "$ROOT_DIR"
 
+      # Step 3: Clone Repositories
       - name: Clone Repositories
         run: |
           git clone https://github.com/TheWildJames/AnyKernel3.git -b android14-5.15
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android14-6.1
           git clone https://github.com/TheWildJames/kernel_patches.git
 
+      # Step 4: Fetch Kernel Sources using Google Repo
       - name: Fetch Kernel Sources
         run: |
           mkdir oneplus12_v
@@ -44,6 +50,7 @@ jobs:
           repo sync -j$(nproc)
           rm -rf ./kernel_platform/common/android/abi_gki_protected_exports_*
 
+      # Step 5: Add KernelSU
       - name: Add KernelSU
         run: |
           cd oneplus12_v/kernel_platform
@@ -51,6 +58,7 @@ jobs:
           cd KernelSU-Next/kernel
           sed -i 's/ccflags-y += -DKSU_VERSION=16/ccflags-y += -DKSU_VERSION=12113/' ./Makefile
 
+      # Step 6: Add SUSFS
       - name: Add SUSFS
         run: |
           cd oneplus12_v/kernel_platform
@@ -68,6 +76,7 @@ jobs:
           patch -p1 -F 3 < ../kernel_patches/apk_sign.c_fix.patch
           patch -p1 --fuzz=3 < ../kernel_patches/Makefile_fix.patch
 
+      # Step 7: Build Kernel
       - name: Build Kernel
         run: |
           echo "CONFIG_KSU=y" >> ./common/arch/arm64/configs/gki_defconfig
@@ -77,20 +86,23 @@ jobs:
           sed -i '2s/check_defconfig//' ./kernel_platform/common/build.config.gki
           ./kernel_platform/oplus/build/oplus_build_kernel.sh pineapple gki
 
+      # Step 8: Copy Kernel Image
       - name: Copy Kernel Image
         run: |
           cp ./out/dist/Image ../AnyKernel3/Image
 
+      # Step 9: Create ZIP File
       - name: Create ZIP File
         run: |
           cd ../AnyKernel3
           ZIP_NAME="Anykernel3-OP-A15-android14-6.1-KernelSU-SUSFS-$(date +'%Y-%m-%d-%H-%M-%S').zip"
           zip -r "../$ZIP_NAME" ./*
 
+      # Step 10: Create GitHub Release
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2.2.0
         with:
-          files: "../Anykernel3/*.zip"
+          files: "../AnyKernel3/*.zip"
           tag_name: "v$(date +'%Y.%m.%d-%H%M%S')"
           release_name: "OP12 A15 android14-6.1 With KernelSU & SUSFS"
           body: "Kernel release with KernelSU and SUSFS."
