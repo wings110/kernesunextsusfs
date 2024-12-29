@@ -14,6 +14,13 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip3 install --upgrade pip
+          pip3 install git-repo
+
       - name: Set up Build Directory
         run: |
           mkdir -p builds
@@ -78,18 +85,16 @@ jobs:
           cd ../AnyKernel3
           export ZIP_NAME="Anykernel3-OP-A15-android14-6.1-KernelSU-SUSFS-$(date +'%Y-%m-%d-%H-%M-%S').zip"
           zip -r "../$ZIP_NAME" ./*
+          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          API_URL="https://api.github.com/repos/${{ github.repository }}/releases"
           TAG_NAME="v$(date +'%Y.%m.%d-%H%M%S')"
           RELEASE_NAME="OP12 A15 android14-6.1 With KernelSU & SUSFS"
-          ZIP_NAME="Anykernel3-OP-A15-android14-6.1-KernelSU-SUSFS-$(date +'%Y-%m-%d-%H-%M-%S').zip"
-
-          # Create a release
-          curl -X POST "$API_URL" \
+          ZIP_FILE=$(echo ${{ env.ZIP_NAME }})
+          curl -X POST \
             -H "Authorization: Bearer $GITHUB_TOKEN" \
             -H "Content-Type: application/json" \
             -d "{
@@ -98,13 +103,10 @@ jobs:
               \"body\": \"Kernel release with KernelSU and SUSFS.\",
               \"draft\": false,
               \"prerelease\": false
-            }"
-
-          # Get the release ID
-          RELEASE_ID=$(curl -H "Authorization: Bearer $GITHUB_TOKEN" "$API_URL/tags/$TAG_NAME" | jq -r '.id')
-
-          # Upload the ZIP file
-          curl -X POST "$API_URL/$RELEASE_ID/assets?name=$ZIP_NAME" \
+            }" \
+            https://api.github.com/repos/${{ github.repository }}/releases
+          curl -X POST \
             -H "Authorization: Bearer $GITHUB_TOKEN" \
             -H "Content-Type: application/zip" \
-            --data-binary @"./builds/$ZIP_NAME"
+            --data-binary @$ZIP_FILE \
+            "$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG_NAME | jq -r .upload_url | sed -e 's/{?name,label}/?name='${ZIP_FILE##*/}'/')"
