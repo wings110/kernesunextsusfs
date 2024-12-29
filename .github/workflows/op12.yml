@@ -6,11 +6,6 @@ on:
       - main
   workflow_dispatch:
 
-defaults:
-  run:
-    shell: bash
-    options: '-e pipefail'
-
 jobs:
   build-release:
     runs-on: ubuntu-latest
