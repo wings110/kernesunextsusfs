@@ -145,22 +145,6 @@ jobs:
           echo "CONFIG_KSU_SUSFS=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> ./common/arch/arm64/configs/gki_defconfig
           
-          # Additional SUSFS features
-          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./common/arch/arm64/configs/gki_defconfig
-          
-          # Disable debug configs for production build
-          sed -i '/CONFIG_DEBUG_KERNEL/d' ./common/arch/arm64/configs/gki_defconfig
-          sed -i '/CONFIG_DEBUG_INFO/d' ./common/arch/arm64/configs/gki_defconfig
-          sed -i '/CONFIG_DEBUG_INFO_REDUCED/d' ./common/arch/arm64/configs/gki_defconfig
-          sed -i '/CONFIG_DEBUG_FS/d' ./common/arch/arm64/configs/gki_defconfig
-          sed -i '/CONFIG_DEBUG_SECTION_MISMATCH/d' ./common/arch/arm64/configs/gki_defconfig
           
           # Remove defconfig check
           sed -i '2s/check_defconfig//' ./common/build.config.gki
