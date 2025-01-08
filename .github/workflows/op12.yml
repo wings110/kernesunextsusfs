@@ -182,7 +182,7 @@ jobs:
       - name: Package Kernel
         working-directory: builds/${{ env.ROOT_DIR }}
         run: |
-          cp kernel_platform/oneplus12_v/kernel_platform/out/dist/Image AnyKernel3/Image
+          cp /kernel_platform/out/msm-kernel-pineapple-gki/host/Image AnyKernel3/Image
           cd AnyKernel3
           ZIP_NAME="Anykernel3-OP-A15-${BRANCH}-KernelSU-SUSFS-$(date +'%Y-%m-%d-%H-%M-%S').zip"
           zip -r9 "../$ZIP_NAME" ./*
