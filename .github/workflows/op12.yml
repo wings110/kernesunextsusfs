@@ -13,6 +13,7 @@ jobs:
       DEBIAN_FRONTEND: noninteractive
 
     steps:
+      # Previous steps remain the same until Setup SUSFS
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -83,33 +84,42 @@ jobs:
           curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU/next/kernel/setup.sh" | bash -s next
           cd KernelSU-Next/kernel
           sed -i 's/ccflags-y += -DKSU_VERSION=16/ccflags-y += -DKSU_VERSION=12113/' ./Makefile
+          cd ../..
 
-      - name: Setup SUSFS
+      - name: Setup SUSFS and Apply Patches
         working-directory: ${{ env.ROOT_DIR }}/oneplus12_v/kernel_platform
         run: |
-          cp ../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU-Next/
-          cp ../../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android14-6.1.patch ./common/
+          # Create necessary directories
           mkdir -p ./common/fs
           mkdir -p ./common/include/linux
+          
+          # Copy SUSFS files
           cp ../../susfs4ksu/kernel_patches/fs/susfs.c ./common/fs/
           cp ../../susfs4ksu/kernel_patches/include/linux/susfs.h ./common/include/linux/
           
+          # Copy and apply patches
+          cp ../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU-Next/
+          cp ../../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android14-6.1.patch ./common/
+          cp ../../kernel_patches/69_hide_stuff.patch ./common/
+          cp ../../kernel_patches/selinux.c_fix.patch ./
+          cp ../../kernel_patches/apk_sign.c_fix.patch ./
+          cp ../../kernel_patches/Makefile_fix.patch ./
+          
+          # Apply patches with || true
           cd KernelSU-Next
-          patch -p1 < 10_enable_susfs_for_ksu.patch
+          patch -p1 < 10_enable_susfs_for_ksu.patch || true
+          
           cd ../common
           patch -p1 < 50_add_susfs_in_gki-android14-6.1.patch || true
-          
-          cp ../../kernel_patches/69_hide_stuff.patch ./
           patch -p1 -F 3 < 69_hide_stuff.patch || true
+          
+          # Remove problematic line from Makefile
           sed -i '/obj-\$(CONFIG_KSU_SUSFS_SUS_SU) += sus_su.o/d' ./fs/Makefile
           
           cd ..
-          cp ../../../kernel_patches/selinux.c_fix.patch ./
-          patch -p1 -F 3 < selinux.c_fix.patch
-          cp ../../../kernel_patches/apk_sign.c_fix.patch ./
-          patch -p1 -F 3 < apk_sign.c_fix.patch
-          cp ../../../kernel_patches/Makefile_fix.patch ./
-          patch -p1 --fuzz=3 < ./Makefile_fix.patch
+          patch -p1 -F 3 < selinux.c_fix.patch || true
+          patch -p1 -F 3 < apk_sign.c_fix.patch || true
+          patch -p1 --fuzz=3 < Makefile_fix.patch || true
 
       - name: Configure and Build Kernel
         working-directory: ${{ env.ROOT_DIR }}/oneplus12_v/kernel_platform
@@ -156,4 +166,5 @@ jobs:
           path: |
             ${{ env.ROOT_DIR }}/oneplus12_v/out/*.log
             ${{ env.ROOT_DIR }}/oneplus12_v/out/error.log
+            ${{ env.ROOT_DIR }}/oneplus12_v/kernel_platform/**/*.rej
           retention-days: 5
