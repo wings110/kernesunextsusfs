@@ -171,7 +171,11 @@ jobs:
         working-directory: builds/${{ env.ROOT_DIR }}/kernel_platform/oneplus12_v/kernel_platform
         run: |
           export PATH="/usr/lib/ccache:$PATH"
-          ./build_with_bazel.py -t pineapple gki -j$(nproc --all) \
+          # Modified build command with correct syntax
+          ./build_with_bazel.py \
+            -t pineapple \
+            gki \
+            --jobs=$(nproc --all) \
             --verbose_failures \
             --config=stamp \
             --user_kmi_symbol_lists=//msm-kernel:android/abi_gki_aarch64_qcom \
