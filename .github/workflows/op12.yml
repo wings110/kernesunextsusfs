@@ -9,107 +9,109 @@ on:
 jobs:
   build-release:
     runs-on: ubuntu-latest
+    env:
+      DEBIAN_FRONTEND: noninteractive
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # Step 1: Install Dependencies and Fix Repo Tool
-      - name: Install Dependencies and Setup Repo
+      - name: Setup Build Environment
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-pip curl git
-          
-          # Install and setup repo tool properly
-          mkdir -p ~/bin
-          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
-          chmod a+x ~/bin/repo
-          echo "PATH=$HOME/bin:$PATH" >> $GITHUB_ENV
-          
-      # Step 2: Set up Build Directory
-      - name: Set up Build Directory
-        run: |
-          if [ -d "./builds" ]; then
-            echo "'builds' folder already exists removing it."
-            rm -rf ./builds
-          fi
-          mkdir -p builds
-          rm -rf builds/*
-          cd builds
-          export ROOT_DIR="OP12-A15-$(date +'%Y-%m-%d-%I-%M-%p')-release"
-          echo "Creating root folder $ROOT_DIR..."
-          mkdir "$ROOT_DIR"
-          cd "$ROOT_DIR"
-          echo "ROOT_DIR=$PWD" >> $GITHUB_ENV
+          sudo apt-get install -y --no-install-recommends \
+            python3-pip \
+            curl \
+            git \
+            zip \
+            unzip \
+            gcc \
+            g++ \
+            make \
+            ninja-build \
+            file \
+            bc \
+            bison \
+            flex \
+            libssl-dev \
+            libelf-dev \
+            wget \
+            build-essential \
+            python3-dev \
+            python3-setuptools \
+            rsync \
+            ccache
 
-      # Step 3: Clone Repositories
-      - name: Clone Repositories
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          max-size: 2G
+
+      - name: Setup Python and Repo Tool
+        run: |
+          python3 -m pip install --upgrade pip
+          pip3 install gitpython xmltodict
+          mkdir -p ~/.bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/.bin/repo
+          chmod a+x ~/.bin/repo
+          echo "$HOME/.bin" >> $GITHUB_PATH
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+
+      - name: Configure Build Directory
+        run: |
+          ROOT_DIR="${GITHUB_WORKSPACE}/builds/OP12-A15-$(date +'%Y-%m-%d-%I-%M-%p')-release"
+          echo "ROOT_DIR=${ROOT_DIR}" >> $GITHUB_ENV
+          mkdir -p "${ROOT_DIR}"
+          cd "${ROOT_DIR}"
+
+      - name: Clone Required Repositories
         working-directory: ${{ env.ROOT_DIR }}
         run: |
-          echo "Cloning repositories..."
           git clone https://github.com/TheWildJames/AnyKernel3.git -b android14-5.15
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android14-6.1
           git clone https://github.com/TheWildJames/kernel_patches.git
-
-      # Step 4: Fetch Kernel Sources
-      - name: Fetch Kernel Sources
-        working-directory: ${{ env.ROOT_DIR }}
-        run: |
-          echo "Get the kernel..."
-          mkdir oneplus12_v
+          mkdir -p oneplus12_v
           cd oneplus12_v
-          # Initialize repo with proper PATH
-          repo init -u https://github.com/OnePlusOSS/kernel_manifest.git -b oneplus/sm8650 -m oneplus12_v.xml
-          repo sync -j$(nproc --all) -v
+          repo init -u https://github.com/OnePlusOSS/kernel_manifest.git -b oneplus/sm8650 -m oneplus12_v.xml --depth=1
+          repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
           rm -rf ./kernel_platform/common/android/abi_gki_protected_exports_*
 
-      # Step 5: Add KernelSU
-      - name: Add KernelSU
+      - name: Setup KernelSU
         working-directory: ${{ env.ROOT_DIR }}/oneplus12_v/kernel_platform
         run: |
-          echo "adding ksu"
           curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU/next/kernel/setup.sh" | bash -s next
           cd KernelSU-Next/kernel
           sed -i 's/ccflags-y += -DKSU_VERSION=16/ccflags-y += -DKSU_VERSION=12113/' ./Makefile
 
-      # Step 6: Add SUSFS
-      - name: Add SUSFS
+      - name: Setup SUSFS
         working-directory: ${{ env.ROOT_DIR }}/oneplus12_v/kernel_platform
         run: |
-          echo "adding susfs"
-          # Copy the SUSFS patches and files from susfs4ksu repository
-          cp ../../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU-Next/
-          cp ../../../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android14-6.1.patch ./common/
-          cp ../../../susfs4ksu/kernel_patches/fs/susfs.c ./common/fs/
-          cp ../../../susfs4ksu/kernel_patches/include/linux/susfs.h ./common/include/linux/
-
-          # Apply the SUSFS patch to KernelSU-Next
+          cp ../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU-Next/
+          cp ../../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android14-6.1.patch ./common/
+          mkdir -p ./common/fs
+          mkdir -p ./common/include/linux
+          cp ../../susfs4ksu/kernel_patches/fs/susfs.c ./common/fs/
+          cp ../../susfs4ksu/kernel_patches/include/linux/susfs.h ./common/include/linux/
+          
           cd KernelSU-Next
           patch -p1 < 10_enable_susfs_for_ksu.patch
-          cd ..
-
-          # Apply the SUSFS patch in the common directory
-          cd common
+          cd ../common
           patch -p1 < 50_add_susfs_in_gki-android14-6.1.patch || true
-
-          # Copy and apply the 69_hide_stuff patch from kernel_patches repository
-          cp ../../../kernel_patches/69_hide_stuff.patch ./
+          
+          cp ../../kernel_patches/69_hide_stuff.patch ./
           patch -p1 -F 3 < 69_hide_stuff.patch || true
-
-          # Modify the Makefile as required
           sed -i '/obj-\$(CONFIG_KSU_SUSFS_SUS_SU) += sus_su.o/d' ./fs/Makefile
+          
           cd ..
-
-          # Copy and apply additional patches from kernel_patches repository
           cp ../../../kernel_patches/selinux.c_fix.patch ./
           patch -p1 -F 3 < selinux.c_fix.patch
           cp ../../../kernel_patches/apk_sign.c_fix.patch ./
           patch -p1 -F 3 < apk_sign.c_fix.patch
           cp ../../../kernel_patches/Makefile_fix.patch ./
-          patch -p1 --fuzz=3 < Makefile_fix.patch
+          patch -p1 --fuzz=3 < ./Makefile_fix.patch
 
-      # Step 7: Build Kernel
-      - name: Build Kernel
+      - name: Configure and Build Kernel
         working-directory: ${{ env.ROOT_DIR }}/oneplus12_v/kernel_platform
         run: |
           echo "CONFIG_KSU=y" >> ./common/arch/arm64/configs/gki_defconfig
@@ -117,39 +119,41 @@ jobs:
           echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> ./common/arch/arm64/configs/gki_defconfig
           cd ..
           sed -i '2s/check_defconfig//' ./kernel_platform/common/build.config.gki
+          export PATH="/usr/lib/ccache:$PATH"
           ./kernel_platform/oplus/build/oplus_build_kernel.sh pineapple gki
 
-      # Step 8: Copy Kernel Image
-      - name: Copy Kernel Image
+      - name: Package Kernel
         working-directory: ${{ env.ROOT_DIR }}
         run: |
-          echo "Copying Image"
           cp oneplus12_v/out/dist/Image AnyKernel3/Image
-
-      # Step 9: Create ZIP File
-      - name: Create ZIP File
-        working-directory: ${{ env.ROOT_DIR }}/AnyKernel3
-        run: |
-          echo "Creating zip file..."
+          cd AnyKernel3
           ZIP_NAME="Anykernel3-OP-A15-android14-6.1-KernelSU-SUSFS-$(date +'%Y-%m-%d-%H-%M-%S').zip"
-          zip -r "../$ZIP_NAME" ./*
+          zip -r9 "../$ZIP_NAME" ./*
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
-          cd ..
 
-      # Step 10: Create GitHub Release
-      - name: Create GitHub Release
+      - name: Create Release
         uses: softprops/action-gh-release@v2.2.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: ${{ env.ROOT_DIR }}/${{ env.ZIP_NAME }}
           tag_name: "v$(date +'%Y.%m.%d-%H%M%S')"
-          release_name: "OP12 A15 android14-6.1 With KernelSU & SUSFS"
-          body: "Kernel release with KernelSU and SUSFS"
+          name: "OP12 A15 android14-6.1 With KernelSU & SUSFS"
+          body: |
+            OnePlus 12 Kernel Release
+            - Based on Android 14 (6.1)
+            - Integrated KernelSU
+            - SUSFS Support
+            - Built with GitHub Actions
           draft: false
           prerelease: false
 
-      - name: Completion Message
-        run: |
-          echo "GitHub release created and zip file uploaded."
-          echo "Build and packaging process complete."
+      - name: Upload Build Logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-logs
+          path: |
+            ${{ env.ROOT_DIR }}/oneplus12_v/out/*.log
+            ${{ env.ROOT_DIR }}/oneplus12_v/out/error.log
+          retention-days: 5
