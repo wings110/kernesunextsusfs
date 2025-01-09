@@ -195,7 +195,7 @@ jobs:
           ls -l
 
       - name: Copy Image.lz4 to AnyKernel3
-        working-directory: builds/${{ env.ROOT_DIR }}/kernel_platform/oneplus12_v/kernel_platform/out/msm-kernel-pineapple-gki/host
+        working-directory: builds/${{ env.ROOT_DIR }}/oneplus12_v 
         run: |
           echo "Copying Image"
           # Use the absolute path to AnyKernel3
