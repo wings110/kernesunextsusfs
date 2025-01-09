@@ -74,6 +74,7 @@ jobs:
           mkdir -p ~/.bin
           curl https://storage.googleapis.com/git-repo-downloads/repo > ~/.bin/repo
           chmod a+x ~/.bin/repo
+          export PATH=$HOME/bin:$PATH  # Add $HOME/bin to PATH
           echo "$HOME/.bin" >> $GITHUB_PATH
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "actions@github.com"
@@ -187,11 +188,19 @@ jobs:
           echo "Found build directory: $BUILD_DIR"
           ls -la "$BUILD_DIR"
 
+
+      - name: Debug Working Directory
+        working-directory: builds/${{ env.ROOT_DIR }}
+        run: |
+          pwd
+          ls -l
+
       - name: Copy Image.lz4 to AnyKernel3
-        working-directory: builds/${{ env.ROOT_DIR }}/kernel_platform/oneplus12_v/kernel_platform/out/msm-kernel-pineapple-gki/host 
+        working-directory: builds/${{ env.ROOT_DIR }}/kernel_platform/oneplus12_v/kernel_platform/out/msm-kernel-pineapple-gki/host
         run: |
           echo "Copying Image"
-          cp ./Image ../../../../../../AnyKernel3/Image
+          # Use the absolute path to AnyKernel3
+          cp ./Image /home/runner/work/kernesunextsusfs/kernesunextsusfs/builds/${{ env.ROOT_DIR }}/AnyKernel3/Image 
           
       - name: Package Kernel
         working-directory: builds/${{ env.ROOT_DIR }}
