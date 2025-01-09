@@ -179,6 +179,14 @@ jobs:
             --user_kmi_symbol_lists=//msm-kernel:android/abi_gki_aarch64_qcom \
             --ignore_missing_projects \
 
+      # List contents of the dynamically named directory
+      - name: List contents of the build directory
+        run: |
+          # Find the directory matching the pattern and list its contents
+          BUILD_DIR=$(ls -d /home/runner/work/kernesunextsusfs/kernesunextsusfs/builds/*/kernel_platform/oneplus12_v/kernel_platform/out/msm-kernel-pineapple-gki/host)
+          echo "Found build directory: $BUILD_DIR"
+          ls -la "$BUILD_DIR"
+
       - name: Package Kernel
         working-directory: builds/${{ env.ROOT_DIR }}
         run: |
