@@ -207,24 +207,16 @@ jobs:
           ls -lh "../$ZIP_NAME"
           echo "zip_name=$ZIP_NAME" >> $GITHUB_ENV
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2.2.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          files: ./builds/${{ env.ROOT_DIR }}/${{ env.ZIP_NAME }}
-          tag_name: "v$(date +'%Y.%m.%d-%H%M%S')"
-          name: "OP12 A15 ${{ env.BRANCH }} With KernelSU & SUSFS"
-          body: |
-            OnePlus 12 Kernel Release
-            - Based on Android 14 (6.1)
-            - Integrated KernelSU
-            - SUSFS Support
-            - Built with GitHub Actions
-            - Build Date: $(date +'%Y-%m-%d %H:%M:%S')
-          draft: false
-          prerelease: false
-
+      - name: Publish Release
+        run: |
+         cd ./builds/${ROOT_DIR}
+         echo "ZIP_NAME: ${{ env.zip_name }}"  # Corrected: Use the environment variable from GITHUB_ENV
+         ZIP_FILE_PATH="$GITHUB_WORKSPACE/builds/${ROOT_DIR}/${{ env.zip_name }}"
+         echo "ZIP_FILE_PATH: $ZIP_FILE_PATH"  # Debugging the path
+         gh release create "v${BRANCH}-$(date +'%Y.%m.%d-%H%M%S')" "$ZIP_FILE_PATH" \
+           --repo "$REPO_NAME" \
+           --title "OP12 A15 $BRANCH With KernelSU & SUSFS" \
+           --notes "Kernel release"
       - name: Upload Build Logs
         uses: actions/upload-artifact@v4
         if: always()
