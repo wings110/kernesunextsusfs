@@ -190,18 +190,17 @@ jobs:
             -o "$(pwd)/out"
             
       - name: Debug Working Directory
-        working-directory: builds/${{ env.ROOT_DIR }}
-        run: |
+        working-directory: builds/${{ env.ROOT_DIR }}/kernel_platform/oneplus12_v/out/dist
+        run: |         
           pwd
           ls -l
 
-      - name: Copy Image.lz4 to AnyKernel3
-        working-directory: builds/${{ env.ROOT_DIR }}/oneplus12_v 
+      - name: Copy Image.lz4 to AnyKernel3 
         run: |
           echo "Copying Image"
           # Use the absolute path to AnyKernel3
-          cp kernel_platform/out/dist/Image ../anykernel3/Image
-          cp kernel_platform/out/dist/Image.lz4 ../anykernel3/Image.lz4
+          cp out/dist/Image ../anykernel3/Image
+          cp out/dist/Image.lz4 ../anykernel3/Image.lz4
           
       - name: Package Kernel
         working-directory: builds/${{ env.ROOT_DIR }}
