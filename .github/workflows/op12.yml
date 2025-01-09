@@ -116,7 +116,6 @@ jobs:
         run: |
           curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -s next
           cd KernelSU-Next/kernel
-          sed -i 's/ccflags-y += -DKSU_VERSION=16/ccflags-y += -DKSU_VERSION=12113/' ./Makefile
 
       - name: Setup SUSFS
         working-directory: builds/${{ env.ROOT_DIR }}/kernel_platform/oneplus12_v/kernel_platform
@@ -174,7 +173,7 @@ jobs:
           sed -i '2s/check_defconfig//' ./common/build.config.gki
 
       - name: Build Kernel
-        working-directory: builds/${{ env.ROOT_DIR }}/oneplus12_v/kernel_platform  
+        working-directory: builds/${{ env.ROOT_DIR }}/kernel_platform/oneplus12_v/kernel_platform
         run: |
           mkdir out
           export PATH="/usr/lib/ccache:$PATH"
