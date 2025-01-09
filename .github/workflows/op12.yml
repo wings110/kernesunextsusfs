@@ -188,11 +188,11 @@ jobs:
           ls -la "$BUILD_DIR"
 
       - name: Copy Image.lz4 to AnyKernel3
+        working-directory: builds/${{ env.ROOT_DIR }}/kernel_platform/oneplus12_v/kernel_platform/out/msm-kernel-pineapple-gki/host 
         run: |
           echo "Copying Image"
-          cp ./out/dist/Image ../AnyKernel3/Image
-        working-directory: ./builds/${ROOT_DIR}/oneplus12_v/kernel_platform
-
+          cp ./Image ../../../../../../AnyKernel3/Image
+          
       - name: Package Kernel
         working-directory: builds/${{ env.ROOT_DIR }}
         run: |
