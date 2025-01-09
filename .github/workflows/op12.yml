@@ -190,7 +190,7 @@ jobs:
             -o "$(pwd)/out"
             
       - name: Debug Working Directory
-        working-directory: builds/${{ env.ROOT_DIR }}/kernel_platform/oneplus12_v/out/dist
+        working-directory: builds/${{ env.ROOT_DIR }}/kernel_platform/oneplus12_v/kernel_platform/out
         run: |         
           pwd
           ls -l
@@ -199,11 +199,11 @@ jobs:
         run: |
           echo "Copying Image"
           # Use the absolute path to AnyKernel3
-          cp out/dist/Image ../anykernel3/Image
-          cp out/dist/Image.lz4 ../anykernel3/Image.lz4
+          cp out/Image ../AnyKernel3/Image
+          cp out/Image.lz4 ../AnyKernel3/Image.lz4
           
       - name: Package Kernel
-        working-directory: builds/${{ env.ROOT_DIR }}
+        working-directory: builds/${{ env.ROOT_DIR }}/AnyKernel3
         run: |
           ZIP_NAME="Anykernel3-OP-A15-${BRANCH}-KernelSU-SUSFS-$(date +'%Y-%m-%d-%H-%M-%S').zip"
           zip -r9 "../$ZIP_NAME" ./*
