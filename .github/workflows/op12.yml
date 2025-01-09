@@ -169,6 +169,8 @@ jobs:
       - name: Build Kernel
         working-directory: builds/${{ env.ROOT_DIR }}/kernel_platform/oneplus12_v/kernel_platform
         run: |
+          cd kernel_platform
+          mkdir out
           export PATH="/usr/lib/ccache:$PATH"
           # Modified build command with correct syntax
           ./build_with_bazel.py \
@@ -179,14 +181,7 @@ jobs:
             --config=stamp \
             --user_kmi_symbol_lists=//msm-kernel:android/abi_gki_aarch64_qcom \
             --ignore_missing_projects \
-
-      # List contents of the dynamically named directory
-      - name: List contents of the build directory
-        run: |
-          # Find the directory matching the pattern and list its contents
-          BUILD_DIR=$(ls -d /home/runner/work/kernesunextsusfs/kernesunextsusfs/builds/*/kernel_platform/oneplus12_v/kernel_platform/out/msm-kernel-pineapple-gki/host)
-          echo "Found build directory: $BUILD_DIR"
-          ls -la "$BUILD_DIR"
+            -o "$(pwd)/out"\
 
 
       - name: Debug Working Directory
@@ -200,7 +195,8 @@ jobs:
         run: |
           echo "Copying Image"
           # Use the absolute path to AnyKernel3
-          cp ./Image /home/runner/work/kernesunextsusfs/kernesunextsusfs/builds/${{ env.ROOT_DIR }}/AnyKernel3/Image 
+          cp kernel_platform/out/dist/Image ../anykernel3/Image
+          cp kernel_platform/out/dist/Image.lz4 ../anykernel3/Image.lz4
           
       - name: Package Kernel
         working-directory: builds/${{ env.ROOT_DIR }}
