@@ -195,19 +195,17 @@ jobs:
           pwd
           ls -l
 
-      - name: Copy Image.lz4 to AnyKernel3 
+      - name: Create ZIP Package
+        working-directory: builds/${{ env.ROOT_DIR }}/kernel_platform 
         run: |
-          echo "Copying Image"
-          # Use the absolute path to AnyKernel3
-          cp out/Image ../AnyKernel3/Image
-          cp out/Image.lz4 ../AnyKernel3/Image.lz4
-          
-      - name: Package Kernel
-        working-directory: builds/${{ env.ROOT_DIR }}/AnyKernel3
-        run: |
-          ZIP_NAME="Anykernel3-OP-A15-${BRANCH}-KernelSU-SUSFS-$(date +'%Y-%m-%d-%H-%M-%S').zip"
-          zip -r9 "../$ZIP_NAME" ./*
-          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+          cp oneplus12_v/kernel_platform/out/dist/Image AnyKernel3/Image
+          cp oneplus12_v/kernel_platform/out/dist/Image.lz4 AnyKernel3/Image.lz4
+          cd AnyKernel3
+          ZIP_NAME="Anykernel3-OP-A15-android14-6.1-KernelSUNext-SUSFS-$(date +'%Y-%m-%d-%H-%M-%S').zip"
+          echo "Creating zip file $ZIP_NAME..."
+          zip -r "../$ZIP_NAME" ./*
+          ls -lh "../$ZIP_NAME"
+          echo "zip_name=$ZIP_NAME" >> $GITHUB_ENV
 
       - name: Create Release
         uses: softprops/action-gh-release@v2.2.0
