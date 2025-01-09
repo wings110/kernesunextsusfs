@@ -190,7 +190,7 @@ jobs:
             -o "$(pwd)/out"
             
       - name: Debug Working Directory
-        working-directory: builds/${{ env.ROOT_DIR }}/kernel_platform/oneplus12_v/kernel_platform/out
+        working-directory: builds/${{ env.ROOT_DIR }}/kernel_platform/oneplus12_v/kernel_platform/out/dist
         run: |         
           pwd
           ls -l
