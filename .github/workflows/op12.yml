@@ -187,11 +187,15 @@ jobs:
           echo "Found build directory: $BUILD_DIR"
           ls -la "$BUILD_DIR"
 
+      - name: Copy Image.lz4 to AnyKernel3
+        run: |
+          echo "Copying Image"
+          cp ./out/dist/Image ../AnyKernel3/Image
+        working-directory: ./builds/${ROOT_DIR}/oneplus12_v/kernel_platform
+
       - name: Package Kernel
         working-directory: builds/${{ env.ROOT_DIR }}
         run: |
-          cp ./builds/${ROOT_DIR}/oneplus12_v/kernel_platform/out/msm-kernel-pineapple-gki/Image ./builds/${ROOT_DIR}/AnyKernel3/Image
-          cd ./builds/${ROOT_DIR}/AnyKernel3
           ZIP_NAME="Anykernel3-OP-A15-${BRANCH}-KernelSU-SUSFS-$(date +'%Y-%m-%d-%H-%M-%S').zip"
           zip -r9 "../$ZIP_NAME" ./*
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
