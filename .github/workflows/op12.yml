@@ -102,7 +102,7 @@ jobs:
           git clone https://github.com/TheWildJames/AnyKernel3.git -b $BRANCH
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android14-6.1
           git clone https://github.com/TheWildJames/kernel_patches.git
-          git clone https://github.com/cabagekiller/SUS_FS-Patches.git
+          git clone https://github.com/cabagekiller/SUS_FS-Patches.git kernel_patches
 
       - name: Setup Kernel Source
         working-directory: builds/${{ env.ROOT_DIR }}
