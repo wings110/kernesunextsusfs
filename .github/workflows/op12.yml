@@ -129,9 +129,8 @@ jobs:
           mkdir -p ./common/include/linux
           
           # Copy SUSFS files
-          cp ../../../susfs4ksu/kernel_patches/fs/susfs.c ./common/fs/
-          cp ../../../susfs4ksu/kernel_patches/include/linux/susfs.h ./common/include/linux/
-          cp ../../../susfs4ksu/kernel_patches/include/linux/susfs_def.h ./common/include/linux/
+          cp ../../../susfs4ksu/kernel_patches/fs/* ./common/fs/
+          cp ../../../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
           
           # Copy patches
           cp ../../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU-Next/
@@ -150,8 +149,10 @@ jobs:
           patch -p1 < 50_add_susfs_in_gki-android14-6.1.patch || true
           patch -p1 -F 3 < 69_hide_stuff.patch || true
           sed -i '/obj-$(CONFIG_KSU_SUSFS_SUS_SU) += sus_su.o/d' ./fs/Makefile
-          
+          git add -A && git commit -a -m "BUILD Kernel" || true
           cd ..
+          git add -A && git commit -a -m "BUILD Kernel" || true
+          git rm --cached KernelSU-Next
           patch -p1 -F 3 < selinux.c_fix.patch || true
           patch -p1 -F 3 < apk_sign.c_fix.patch || true
           patch -p1 --fuzz=3 < Makefile_fix.patch || true
