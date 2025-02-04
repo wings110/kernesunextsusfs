@@ -141,7 +141,7 @@ jobs:
           #cp ../../../kernel_patches/Makefile_fix.patch ./
           #cp ../../../kernel_patches/core_hook.c_fix.patch ./
           cp ../../../kernel_patches/KernelSU-Next-Implement-SUSFS-v1.5.5-Universal.patch ./
-          
+          patch -p1 --forward < KernelSU-Next-Implement-SUSFS-v1.5.5-Universal.patch || true
           # Apply patches
           cd KernelSU-Next
           patch -p1 --forward < KernelSU-Next-Implement-SUSFS-v1.5.5-Universal.patch || true
