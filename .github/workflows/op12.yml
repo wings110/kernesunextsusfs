@@ -140,7 +140,7 @@ jobs:
           #cp ../../../kernel_patches/apk_sign.c_fix.patch ./
           #cp ../../../kernel_patches/Makefile_fix.patch ./
           #cp ../../../kernel_patches/core_hook.c_fix.patch ./
-          #cp ../../../kernel_patches/KernelSU-Next-Implement-SUSFS-v1.5.5-Universal.patch ./KernelSU-Next
+          cp ../../../kernel_patches/KernelSU-Next-Implement-SUSFS-v1.5.5-Universal.patch ./
           
           # Apply patches
           cd KernelSU-Next
