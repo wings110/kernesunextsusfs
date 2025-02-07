@@ -249,7 +249,6 @@ jobs:
             --repo "$REPO_NAME" \
             --title "OP12 A15 ${{ env.BRANCH }} With KernelSU & SUSFS" \
             --notes "Kernel release" \
-            --prerelease
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
            
